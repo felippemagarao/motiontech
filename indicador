@@ -1,0 +1,63 @@
+import streamlit as st
+
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+
+st.set_page_config(page_title="Indicador de Clientes B2B", layout="centered")
+
+st.title("📈 Indicador de Desempenho: Novos Clientes B2B")
+
+st.markdown("""
+Este painel monitora o número de novos clientes B2B ao longo de 2025, comparando com a meta de crescimento de 40%.
+""")
+
+# Definições
+meta_2024 = st.number_input("Número de novos clientes B2B em 2024:", min_value=1, value=100)
+meta_2025 = int(meta_2024 * 1.4)
+st.markdown(f"🎯 **Meta para 2025:** {meta_2025} novos clientes")
+
+# Entrada de dados mensais
+st.markdown("## 📅 Entradas Mensais")
+meses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"]
+dados = {}
+
+for mes in meses:
+    dados[mes] = st.number_input(f"Novos clientes em {mes}:", min_value=0, step=1)
+
+# Criando DataFrame
+df = pd.DataFrame.from_dict(dados, orient='index', columns=['Clientes'])
+df['Acumulado'] = df['Clientes'].cumsum()
+df['% da Meta'] = round((df['Acumulado'] / meta_2025) * 100, 1)
+
+# Cores por faixa de desempenho
+def faixa(valor):
+    if valor >= 40:
+        return 'green'
+    elif valor >= 20:
+        return 'orange'
+    else:
+        return 'red'
+
+cores = df['% da Meta'].apply(faixa)
+
+# Gráfico
+fig, ax = plt.subplots(figsize=(10, 5))
+bars = ax.bar(df.index, df['% da Meta'], color=cores)
+ax.axhline(40, color='blue', linestyle='--', label='Meta (40%)')
+ax.set_ylabel('% da Meta Alcançada')
+ax.set_title('Desempenho Acumulado: Novos Clientes B2B')
+ax.legend()
+st.pyplot(fig)
+
+# Análise final
+ultimo_valor = df['% da Meta'].iloc[-1]
+if ultimo_valor >= 40:
+    status = "🟢 Excelente! Meta alcançada."
+elif ultimo_valor >= 20:
+    status = "🟠 Atenção! Acompanhar de perto."
+else:
+    status = "🔴 Crítico! Abaixo do esperado."
+
+st.markdown(f"### Status Final: {status}")
+
